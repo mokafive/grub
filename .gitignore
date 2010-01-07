@@ -62,6 +62,7 @@ stamp-h1
 stamp-h.in
 symlist.c
 update-grub_lib
+unidata.c
 *.a
 *.o
 *.py[co]
