@@ -2,6 +2,7 @@
 10_*
 30_os-prober
 40_custom
+41_custom
 aclocal.m4
 ascii.bitmaps
 ascii.h
@@ -74,6 +75,7 @@ stamp-h.in
 symlist.c
 trigtables.c
 update-grub_lib
+unidata.c
 *.a
 *.o
 *.py[co]
