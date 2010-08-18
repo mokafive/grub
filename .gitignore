@@ -1,8 +1,12 @@
 00_header
 10_*
+20_linux_xen
 30_os-prober
 40_custom
+41_custom
 aclocal.m4
+ascii.bitmaps
+ascii.h
 autom4te.cache
 build_env.mk
 config.cache
@@ -35,6 +39,7 @@ grub-fstest
 grub_fstest_init.c
 grub_fstest_init.h
 grub-install
+grub-macho2img
 grub-mk*
 grub-pbkdf2
 grub-pe2elf
@@ -47,6 +52,8 @@ grub_script_check_init.c
 grub_script_check_init.h
 grub_script.tab.c
 grub_script.tab.h
+grub_script.yy.c
+grub_script.yy.h
 grub-set-default
 grub-setup
 grub_setup_init.c
@@ -70,6 +77,7 @@ stamp-h.in
 symlist.c
 trigtables.c
 update-grub_lib
+unidata.c
 *.a
 *.o
 *.py[co]
