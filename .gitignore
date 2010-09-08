@@ -17,7 +17,6 @@ config.log
 config.status
 config.sub
 configure
-conf/*.mk
 *.d
 DISTLIST
 docs/*.info
