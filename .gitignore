@@ -19,7 +19,6 @@ config.log
 config.status
 config.sub
 configure
-*.d
 DISTLIST
 docs/*.info
 docs/stamp-vti
@@ -61,6 +60,7 @@ grub_setup_init.h
 grub-shell
 grub-shell-tester
 *.img
+*.image
 include/grub/cpu
 include/grub/machine
 install-sh
@@ -79,6 +79,7 @@ stamp-h
 stamp-h1
 stamp-h.in
 symlist.c
+symlist.h
 trigtables.c
 update-grub_lib
 unidata.c
