@@ -4,6 +4,8 @@
 30_os-prober
 40_custom
 41_custom
+*.1
+*.8
 aclocal.m4
 ascii.bitmaps
 ascii.h
@@ -17,8 +19,6 @@ config.log
 config.status
 config.sub
 configure
-conf/*.mk
-*.d
 DISTLIST
 docs/*.info
 docs/stamp-vti
@@ -57,11 +57,15 @@ grub-set-default
 grub-setup
 grub_setup_init.c
 grub_setup_init.h
+grub-shell
+grub-shell-tester
 *.img
+*.image
 include/grub/cpu
 include/grub/machine
 install-sh
 lib/libgcrypt-grub
+libgrub_a_init.c
 *.lst
 Makefile
 *.mod
@@ -75,6 +79,7 @@ stamp-h
 stamp-h1
 stamp-h.in
 symlist.c
+symlist.h
 trigtables.c
 update-grub_lib
 unidata.c
@@ -98,6 +103,7 @@ grub-core/Makefile.gcry.am
 grub-core/Makefile.gcry.def
 grub-core/*.module
 grub-core/*.pp
+util/bash-completion.d/grub
 *.a
 *.o
 *.py[co]
