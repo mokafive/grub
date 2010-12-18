@@ -130,6 +130,7 @@ grub-core/gnulib/unistd.h
 grub-core/gnulib/warn-on-use.h
 grub-core/gnulib/wchar.h
 grub-core/gnulib/wctype.h
+grub-core/rs_decoder.S
 widthspec.bin
 widthspec.h
 *.a
