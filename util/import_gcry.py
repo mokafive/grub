@@ -216,7 +216,7 @@ for cipher_file in cipher_files:
                 continue
             m = re.match ("gcry_cipher_spec_t", line)
             if isc and m is not None:
-                assert (not iscryptostart)
+                assert (not ismd)
                 assert (not iscipher)
                 assert (not iscryptostart)
                 ciphername = line [len ("gcry_cipher_spec_t"):].strip ()
