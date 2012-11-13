@@ -124,11 +124,13 @@ for cipher_file in cipher_files:
 
         ciphernames = []
         mdnames = []
+        pknames = []
         hold = False
         skip = False
         skip2 = False
         ismd = False
         iscipher = False
+        ispk = False
         iscryptostart = False
         iscomma = False
         isglue = False
@@ -159,7 +161,7 @@ for cipher_file in cipher_files:
                     sg = s.groups()[0]
                     cryptolist.write (("%s: %s\n") % (sg, modname))
                     iscryptostart = False
-            if ismd or iscipher:
+            if ismd or iscipher or ispk:
                 if re.search (" *};", line) is not None:
                     if not iscomma:
                         fw.write ("    ,\n")
@@ -175,6 +177,7 @@ for cipher_file in cipher_files:
                                   % mdblocksizes [mdname])
                     ismd = False
                     iscipher = False
+                    ispk = False
                 iscomma = not re.search (",$", line) is None
             # Used only for selftests.
             m = re.match ("(static byte|static unsigned char) (weak_keys_chksum)\[[0-9]*\] =", line)
@@ -218,6 +221,7 @@ for cipher_file in cipher_files:
             if isc and m is not None:
                 assert (not ismd)
                 assert (not iscipher)
+                assert (not ispk)
                 assert (not iscryptostart)
                 ciphername = line [len ("gcry_cipher_spec_t"):].strip ()
                 ciphername = re.match("[a-zA-Z0-9_]*",ciphername).group ()
@@ -228,11 +232,23 @@ for cipher_file in cipher_files:
             if isc and m is not None:
                 assert (not ismd)
                 assert (not iscipher)
+                assert (not ispk)
                 assert (not iscryptostart)
                 mdname = line [len ("gcry_md_spec_t"):].strip ()
                 mdname = re.match("[a-zA-Z0-9_]*",mdname).group ()
                 mdnames.append (mdname)
                 ismd = True
+                iscryptostart = True
+            m = re.match ("gcry_pk_spec_t", line)
+            if isc and m is not None:
+                assert (not ismd)
+                assert (not iscipher)
+                assert (not ispk)
+                assert (not iscryptostart)
+                pkname = line [len ("gcry_pk_spec_t"):].strip ()
+                pkname = re.match("[a-zA-Z0-9_]*",mdname).group ()
+                pknames.append (pkname)
+                ispk = True
                 iscryptostart = True
             m = re.match ("static const char \*selftest.*;$", line)
             if m is not None:
@@ -281,8 +297,20 @@ for cipher_file in cipher_files:
                     chlognew = "%s %s" % (chlognew, chmsg)
                     nch = True
                 continue
+            m = re.match ("pk_extra_spec_t", line)
+            if isc and m is not None:
+                skip2 = True
+                fname = line[len ("pk_extra_spec_t "):]
+                fname = re.match ("[a-zA-Z0-9_]*", fname).group ()
+                chmsg = "(%s): Removed." % fname
+                if nch:
+                    chlognew = "%s\n	%s" % (chlognew, chmsg)
+                else:
+                    chlognew = "%s %s" % (chlognew, chmsg)
+                    nch = True
+                continue
             fw.write (line)
-        if len (ciphernames) > 0 or len (mdnames) > 0:
+        if len (ciphernames) > 0 or len (mdnames) > 0 or len (pknames) > 0:
             if isglue:
                 modfiles = "lib/libgcrypt-grub/cipher/%s lib/libgcrypt-grub/cipher/%s" \
                     % (cipher_file, cipher_file.replace ("-glue.c", ".c"))
@@ -305,6 +333,10 @@ for cipher_file in cipher_files:
                 chmsg = "Register digest %s" % mdname
                 chlognew = "%s\n	%s" % (chlognew, chmsg)
                 fw.write ("  grub_md_register (&%s);\n" % mdname)
+            for pkname in pknames:
+                chmsg = "Register algorithm %s" % pkname
+                chlognew = "%s\n	%s" % (chlognew, chmsg)
+                fw.write ("  grub_pk_register (&%s);\n" % pkname)
             fw.write ("}")
             chmsg = "(GRUB_MOD_FINI(%s)): New function\n" % modname
             chlognew = "%s\n	%s" % (chlognew, chmsg)
@@ -318,6 +350,10 @@ for cipher_file in cipher_files:
                 chmsg = "Unregister MD %s" % mdname
                 chlognew = "%s\n	%s" % (chlognew, chmsg)
                 fw.write ("  grub_md_unregister (&%s);\n" % mdname)
+            for pkname in pknames:
+                chmsg = "Unregister algorithm %s" % pkname
+                chlognew = "%s\n	%s" % (chlognew, chmsg)
+                fw.write ("  grub_pk_unregister (&%s);\n" % pkname)
             fw.write ("}\n")
             conf.write ("module = {\n")
             conf.write ("  name = %s;\n" % modname)
@@ -373,6 +409,12 @@ outfile = os.path.join (cipher_dir_out, "g10lib.h")
 fw=codecs.open (outfile, "w", "utf-8")
 fw.write ("#include <cipher_wrap.h>\n")
 chlog = "%s	* g10lib.h: Likewise.\n" % chlog
+fw.close ()
+
+outfile = os.path.join (cipher_dir_out, "mpi.h")
+fw=codecs.open (outfile, "w", "utf-8")
+fw.write ("#include <cipher_wrap.h>\n")
+chlog = "%s	* mpi.h: Likewise.\n" % chlog
 fw.close ()
 
 infile = os.path.join (cipher_dir_in, "ChangeLog")
