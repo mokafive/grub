@@ -324,5 +324,75 @@ void grub_gcry_init_all (void);
 void grub_gcry_fini_all (void);
 #endif
 
+/* XXX reorder */
+
+struct gcry_mpi;
+typedef struct gcry_mpi *gcry_mpi_t;
+
+/* Type for the pk_generate function.  */
+typedef gcry_err_code_t (*gcry_pk_generate_t) (int algo,
+                                               unsigned int nbits,
+                                               unsigned long use_e,
+                                               gcry_mpi_t *skey,
+                                               gcry_mpi_t **retfactors);
+
+/* Type for the pk_check_secret_key function.  */
+typedef gcry_err_code_t (*gcry_pk_check_secret_key_t) (int algo,
+                                                       gcry_mpi_t *skey);
+
+/* Type for the pk_encrypt function.  */
+typedef gcry_err_code_t (*gcry_pk_encrypt_t) (int algo,
+                                              gcry_mpi_t *resarr,
+                                              gcry_mpi_t data,
+                                              gcry_mpi_t *pkey,
+                                              int flags);
+
+/* Type for the pk_decrypt function.  */
+typedef gcry_err_code_t (*gcry_pk_decrypt_t) (int algo,
+                                              gcry_mpi_t *result,
+                                              gcry_mpi_t *data,
+                                              gcry_mpi_t *skey,
+                                              int flags);
+
+/* Type for the pk_sign function.  */
+typedef gcry_err_code_t (*gcry_pk_sign_t) (int algo,
+                                           gcry_mpi_t *resarr,
+                                           gcry_mpi_t data,
+                                           gcry_mpi_t *skey);
+
+/* Type for the pk_verify function.  */
+typedef gcry_err_code_t (*gcry_pk_verify_t) (int algo,
+                                             gcry_mpi_t hash,
+                                             gcry_mpi_t *data,
+                                             gcry_mpi_t *pkey,
+                                             int (*cmp) (void *, gcry_mpi_t),
+                                             void *opaquev);
+
+/* Type for the pk_get_nbits function.  */
+typedef unsigned (*gcry_pk_get_nbits_t) (int algo, gcry_mpi_t *pkey);
+typedef struct gcry_pk_spec
+{
+  const char *name;
+  const char **aliases;
+  const char *elements_pkey;
+  const char *elements_skey;
+  const char *elements_enc;
+  const char *elements_sig;
+  const char *elements_grip;
+  int use;
+  gcry_pk_generate_t generate;
+  gcry_pk_check_secret_key_t check_secret_key;
+  gcry_pk_encrypt_t encrypt;
+  gcry_pk_decrypt_t decrypt;
+  gcry_pk_sign_t sign;
+  gcry_pk_verify_t verify;
+  gcry_pk_get_nbits_t get_nbits;
+#ifdef GRUB_UTIL
+  const char *modname;
+#endif
+  struct gcry_pk_spec *next;
+} gcry_pk_spec_t;
+
+/* XXX reorder end */
 
 #endif

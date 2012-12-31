@@ -110,5 +110,78 @@ memcmp (const void *s1, const void *s2, grub_size_t n)
 #pragma GCC diagnostic error "-Wshadow"
 #endif
 
+/* Following stuff is taken from libgcrypt headers: */
+
+/* src/cipher.h */
+#define DBG_CIPHER 0
+
+extern gcry_md_spec_t _gcry_digest_spec_crc32;
+extern gcry_md_spec_t _gcry_digest_spec_crc32_rfc1510;
+extern gcry_md_spec_t _gcry_digest_spec_crc24_rfc2440;
+extern gcry_md_spec_t _gcry_digest_spec_md4;
+extern gcry_md_spec_t _gcry_digest_spec_md5;
+extern gcry_md_spec_t _gcry_digest_spec_rmd160;
+extern gcry_md_spec_t _gcry_digest_spec_sha1;
+extern gcry_md_spec_t _gcry_digest_spec_sha224;
+extern gcry_md_spec_t _gcry_digest_spec_sha256;
+extern gcry_md_spec_t _gcry_digest_spec_sha512;
+extern gcry_md_spec_t _gcry_digest_spec_sha384;
+extern gcry_md_spec_t _gcry_digest_spec_tiger;
+extern gcry_md_spec_t _gcry_digest_spec_tiger1;
+extern gcry_md_spec_t _gcry_digest_spec_tiger2;
+extern gcry_md_spec_t _gcry_digest_spec_whirlpool;
+
+
+/* src/gcrypt.h */
+typedef enum gcry_random_level
+  {
+    GCRY_WEAK_RANDOM = 0,
+    GCRY_STRONG_RANDOM = 1,
+    GCRY_VERY_STRONG_RANDOM = 2
+  }
+gcry_random_level_t;
+
+struct gcry_sexp;
+typedef struct gcry_sexp *gcry_sexp_t;
+
+enum gcry_mpi_format
+  {
+    GCRYMPI_FMT_NONE= 0,
+    GCRYMPI_FMT_STD = 1,    /* Twos complement stored without length.  */
+    GCRYMPI_FMT_PGP = 2,    /* As used by OpenPGP (unsigned only).  */
+    GCRYMPI_FMT_SSH = 3,    /* As used by SSH (like STD but with length).  */
+    GCRYMPI_FMT_HEX = 4,    /* Hex format. */
+    GCRYMPI_FMT_USG = 5     /* Like STD but unsigned. */
+  };
+
+
+/* Flags describing usage capabilities of a PK algorithm. */
+#define GCRY_PK_USAGE_SIGN 1   /* Good for signatures. */
+#define GCRY_PK_USAGE_ENCR 2   /* Good for encryption. */
+#define GCRY_PK_USAGE_CERT 4   /* Good to certify other keys. */
+#define GCRY_PK_USAGE_AUTH 8   /* Good for authentication. */
+#define GCRY_PK_USAGE_UNKN 128 /* Unknown usage flag. */
+
+typedef struct gcry_md_handle
+{
+  /* Actual context.  */
+  struct gcry_md_context *ctx;
+
+  /* Buffer management.  */
+  int  bufpos;
+  int  bufsize;
+  unsigned char buf[1];
+} *gcry_md_hd_t;
+
+
+/* src/mpi.h */
+/* Context used with elliptic curve functions.  */
+struct mpi_ec_ctx_s;
+typedef struct mpi_ec_ctx_s *mpi_ec_t;
+
+#define BYTES_PER_MPI_LIMB  (sizeof(unsigned long)) // XXX
+#define BITS_PER_MPI_LIMB    (8*BYTES_PER_MPI_LIMB)
+
+#define MPI_NULL NULL
 
 #endif
