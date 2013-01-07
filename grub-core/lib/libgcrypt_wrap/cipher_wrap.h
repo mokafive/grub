@@ -173,15 +173,67 @@ typedef struct gcry_md_handle
   unsigned char buf[1];
 } *gcry_md_hd_t;
 
+/* mpi/generic/mpi-asm-defs.h */
+
+#define BYTES_PER_MPI_LIMB  SIZEOF_UNSIGNED_LONG
 
 /* src/mpi.h */
+
+#ifndef BITS_PER_MPI_LIMB
+#if BYTES_PER_MPI_LIMB == SIZEOF_UNSIGNED_INT
+  typedef unsigned int mpi_limb_t;
+  typedef   signed int mpi_limb_signed_t;
+#elif BYTES_PER_MPI_LIMB == SIZEOF_UNSIGNED_LONG
+  typedef unsigned long int mpi_limb_t;
+  typedef   signed long int mpi_limb_signed_t;
+#elif BYTES_PER_MPI_LIMB == SIZEOF_UNSIGNED_LONG_LONG
+  typedef unsigned long long int mpi_limb_t;
+  typedef   signed long long int mpi_limb_signed_t;
+#elif BYTES_PER_MPI_LIMB == SIZEOF_UNSIGNED_SHORT
+  typedef unsigned short int mpi_limb_t;
+  typedef   signed short int mpi_limb_signed_t;
+#else
+#error BYTES_PER_MPI_LIMB does not match any C type
+#endif
+#define BITS_PER_MPI_LIMB    (8*BYTES_PER_MPI_LIMB)
+#endif /*BITS_PER_MPI_LIMB*/
+
+struct gcry_mpi
+{
+  int alloced;         /* Array size (# of allocated limbs). */
+  int nlimbs;          /* Number of valid limbs. */
+  int sign;            /* Indicates a negative number and is also used
+                          for opaque MPIs to store the length.  */
+  unsigned int flags; /* Bit 0: Array to be allocated in secure memory space.*/
+                      /* Bit 2: the limb is a pointer to some m_alloced data.*/
+  mpi_limb_t *d;      /* Array with the limbs */
+};
+
+#define MPI_NULL NULL
+
+#define mpi_get_nlimbs(a)     ((a)->nlimbs)
+#define mpi_is_neg(a)         ((a)->sign)
+
+/* Context used with Barrett reduction.  */
+struct barrett_ctx_s;
+typedef struct barrett_ctx_s *mpi_barrett_t;
+
+/* Object to represent a point in projective coordinates. */
+struct mpi_point_s;
+typedef struct mpi_point_s mpi_point_t;
+struct mpi_point_s
+{
+  gcry_mpi_t x;
+  gcry_mpi_t y;
+  gcry_mpi_t z;
+};
+
 /* Context used with elliptic curve functions.  */
 struct mpi_ec_ctx_s;
 typedef struct mpi_ec_ctx_s *mpi_ec_t;
 
-#define BYTES_PER_MPI_LIMB  (sizeof(unsigned long)) // XXX
-#define BITS_PER_MPI_LIMB    (8*BYTES_PER_MPI_LIMB)
+/* src/types.h */
 
-#define MPI_NULL NULL
+typedef unsigned long ulong;
 
 #endif

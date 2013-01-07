@@ -299,6 +299,10 @@ AC_SYS_LARGEFILE
 AC_C_BIGENDIAN
 AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(unsigned short)
+AC_CHECK_SIZEOF(unsigned int)
+AC_CHECK_SIZEOF(unsigned long)
+AC_CHECK_SIZEOF(unsigned long long)
 
 grub_apple_cc
 if test x$grub_cv_apple_cc = xyes ; then
