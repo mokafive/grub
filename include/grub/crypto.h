@@ -67,6 +67,7 @@ typedef enum
     GPG_ERR_WRONG_PUBKEY_ALGO,
     GPG_ERR_OUT_OF_MEMORY
   } gcry_err_code_t;
+#define gpg_error_t gcry_error_t
 #define gpg_err_code_t gcry_err_code_t
 #define gpg_error_t gcry_err_code_t
 
