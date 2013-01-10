@@ -466,6 +466,24 @@ fw.write ("#include <cipher_wrap.h>\n")
 chlog = "%s	* g10lib.h: Likewise.\n" % chlog
 fw.close ()
 
+outfile = os.path.join (mpi_dir_out, "mod-source-info.h")
+fw=codecs.open (outfile, "w", "utf-8")
+fw.write("""
+/* Copied from the file created by libgcrypt's config.links - do not edit */
+/* Host: x86_64-unknown-linux-gnu */
+static char mod_source_info[] =
+  ":generic/mpih-add1.c"
+  ":generic/mpih-sub1.c"
+  ":generic/mpih-mul1.c"
+  ":generic/mpih-mul2.c"
+  ":generic/mpih-mul3.c"
+  ":generic/mpih-lshift.c"
+  ":generic/mpih-rshift.c"
+  ;
+""")
+chlog = "%s	* mod-source-info.h: Likewise.\n" % chlog
+fw.close ()
+
 outfile = os.path.join (cipher_dir_out, "types.h")
 fw=codecs.open (outfile, "w", "utf-8")
 fw.write ("#include <grub/types.h>\n")

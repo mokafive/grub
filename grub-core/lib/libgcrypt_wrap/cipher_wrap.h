@@ -154,6 +154,15 @@ enum gcry_mpi_format
     GCRYMPI_FMT_USG = 5     /* Like STD but unsigned. */
   };
 
+/* Flags used for creating big integers.  */
+enum gcry_mpi_flag
+  {
+    GCRYMPI_FLAG_SECURE = 1,  /* Allocate the number in "secure" memory.  */
+    GCRYMPI_FLAG_OPAQUE = 2   /* The number is not a real one but just
+                                 a way to store some bytes.  This is
+                                 useful for encrypted big integers.  */
+  };
+
 
 /* Flags describing usage capabilities of a PK algorithm. */
 #define GCRY_PK_USAGE_SIGN 1   /* Good for signatures. */
