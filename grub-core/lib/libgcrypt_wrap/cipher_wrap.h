@@ -245,4 +245,15 @@ typedef struct mpi_ec_ctx_s *mpi_ec_t;
 
 typedef unsigned long ulong;
 
+/* libgpg-error/src/gpg-error.h, sigh */
+#ifdef __GNUC__
+#define GPG_ERR_INLINE __inline__
+#elif __STDC_VERSION__ >= 199901L
+#define GPG_ERR_INLINE inline
+#else
+#ifndef GPG_ERR_INLINE
+#define GPG_ERR_INLINE
+#endif
+#endif
+
 #endif
