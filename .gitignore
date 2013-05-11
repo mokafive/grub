@@ -174,6 +174,7 @@ po/LINGUAS
 include/grub/gcrypt/gcrypt.h
 include/grub/gcrypt/g10lib.h
 po/POTFILES.in
+po/POTFILES-shell.in
 *.a
 *.o
 *.py[co]
