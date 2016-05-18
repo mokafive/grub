@@ -235,58 +235,60 @@ EOF
 fi
 
 if [ "x$gfxterm" = x1 ]; then
-    if [ "x$GRUB_THEME" != x ] && [ -f "$GRUB_THEME" ] \
+	if [ "x$GRUB_THEME" != x ] && [ -f "$GRUB_THEME" ] \
 	&& is_path_readable_by_grub "$GRUB_THEME"; then
-	gettext_printf "Found theme: %s\n" "$GRUB_THEME" >&2
+		gettext_printf "Found theme: %s\n" "$GRUB_THEME" >&2
 
-	prepare_grub_to_access_device `${grub_probe} --target=device "$GRUB_THEME"`
-	cat << EOF
-insmod gfxmenu
-EOF
-	themedir="`dirname "$GRUB_THEME"`"
-	for x in "$themedir"/*.pf2 "$themedir"/f/*.pf2; do
-	    if [ -f "$x" ]; then
+		prepare_grub_to_access_device `${grub_probe} --target=device "$GRUB_THEME"`
 		cat << EOF
-loadfont (\$root)`make_system_path_relative_to_its_root $x`
+		insmod gfxmenu
 EOF
-	    fi
-	done
-	if [ x"`echo "$themedir"/*.jpg`" != x"$themedir/*.jpg" ] || [ x"`echo "$themedir"/*.jpeg`" != x"$themedir/*.jpeg" ]; then
-	    cat << EOF
-insmod jpeg
+		themedir="`dirname "$GRUB_THEME"`"
+		for x in "$themedir"/*.pf2 "$themedir"/f/*.pf2; do
+			if [ -f "$x" ]; then
+				cat << EOF
+				loadfont (\$root)`make_system_path_relative_to_its_root $x`
 EOF
-	fi
-	if [ x"`echo "$themedir"/*.png`" != x"$themedir/*.png" ]; then
-	    cat << EOF
-insmod png
+			fi
+		done
+		if [ x"`echo "$themedir"/*.jpg`" != x"$themedir/*.jpg" ] || [ x"`echo "$themedir"/*.jpeg`" != x"$themedir/*.jpeg" ]; then
+	    		cat << EOF
+			insmod jpeg
 EOF
-	fi
-	if [ x"`echo "$themedir"/*.tga`" != x"$themedir/*.tga" ]; then
-	    cat << EOF
-insmod tga
+		fi
+		if [ x"`echo "$themedir"/*.png`" != x"$themedir/*.png" ]; then
+			cat << EOF
+			insmod png
 EOF
-	fi
+		fi
+		if [ x"`echo "$themedir"/*.tga`" != x"$themedir/*.tga" ]; then
+			cat << EOF
+			insmod tga
+EOF
+		fi
 	    
 	cat << EOF
-set theme=(\$root)`make_system_path_relative_to_its_root $GRUB_THEME`
-export theme
+	set theme=(\$root)`make_system_path_relative_to_its_root $GRUB_THEME`
+	export theme
 EOF
-    elif [ "x$GRUB_BACKGROUND" != x ] && [ -f "$GRUB_BACKGROUND" ] \
-	    && is_path_readable_by_grub "$GRUB_BACKGROUND"; then
-	gettext_printf "Found background: %s\n" "$GRUB_BACKGROUND" >&2
-	case "$GRUB_BACKGROUND" in 
-	    *.png)         reader=png ;;
-	    *.tga)         reader=tga ;;
-	    *.jpg|*.jpeg)  reader=jpeg ;;
-	    *)             gettext "Unsupported image format" >&2; echo >&2; exit 1 ;;
-	esac
-	prepare_grub_to_access_device `${grub_probe} --target=device "$GRUB_BACKGROUND"`
-	cat << EOF
-insmod $reader
-background_image -m stretch `make_system_path_relative_to_its_root "$GRUB_BACKGROUND"`
+	elif [ "x$GRUB_BACKGROUND" != x ] && [ -f "$GRUB_BACKGROUND" ] \
+	&& is_path_readable_by_grub "$GRUB_BACKGROUND"; then
+		gettext_printf "Found background: %s\n" "$GRUB_BACKGROUND" >&2
+
+		case "$GRUB_BACKGROUND" in 
+			*.png)         reader=png ;;
+			*.tga)         reader=tga ;;
+			*.jpg|*.jpeg)  reader=jpeg ;;
+			*) gettext "Unsupported image format" >&2; echo >&2; exit 1 ;;
+		esac
+		
+		prepare_grub_to_access_device `${grub_probe} --target=device "$GRUB_BACKGROUND"`
+		cat << EOF
+		insmod $reader
+		background_image -m stretch `make_system_path_relative_to_its_root "$GRUB_BACKGROUND"`
 EOF
-    fi
-fi
+	fi #finish if about GRUB_THEME
+fi #finish if about gfxterm
 
 make_timeout ()
 {
