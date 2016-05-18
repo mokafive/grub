@@ -81,32 +81,35 @@ EOF
 fi # finish if about GRUB_BUTTON_CMOS_ADDRESS
 
 cat <<EOF
+	if [ x"\${feature_menuentry_id}" = xy ]
+	then
+		menuentry_id_option="--id"
+	else
+		menuentry_id_option=""
+	fi
 
-if [ x"\${feature_menuentry_id}" = xy ]; then
-  menuentry_id_option="--id"
-else
-  menuentry_id_option=""
-fi
+	export menuentry_id_option
 
-export menuentry_id_option
+	if [ "\${prev_saved_entry}" ]
+	then
+		set saved_entry="\${prev_saved_entry}"
+		save_env saved_entry
+		set prev_saved_entry=
+		save_env prev_saved_entry
+		set boot_once=true
+	fi
 
-if [ "\${prev_saved_entry}" ]; then
-  set saved_entry="\${prev_saved_entry}"
-  save_env saved_entry
-  set prev_saved_entry=
-  save_env prev_saved_entry
-  set boot_once=true
-fi
+	function savedefault {
+	if [ -z "\${boot_once}" ]
+	then
+		saved_entry="\${chosen}"
+		save_env saved_entry
+	fi
+	}
 
-function savedefault {
-  if [ -z "\${boot_once}" ]; then
-    saved_entry="\${chosen}"
-    save_env saved_entry
-  fi
-}
-
-function load_video {
+	function load_video {
 EOF
+
 if [ -n "${GRUB_VIDEO_BACKEND}" ]; then
     cat <<EOF
   insmod ${GRUB_VIDEO_BACKEND}
