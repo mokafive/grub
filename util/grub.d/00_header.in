@@ -30,299 +30,310 @@ export TEXTDOMAINDIR="@localedir@"
 # Do this as early as possible, since other commands might depend on it.
 # (e.g. the `loadfont' command might need lvm or raid modules)
 for i in ${GRUB_PRELOAD_MODULES} ; do
-  echo "insmod $i"
+	echo "insmod $i"
 done
 
-if [ "x${GRUB_DEFAULT}" = "x" ] ; then GRUB_DEFAULT=0 ; fi
-if [ "x${GRUB_DEFAULT}" = "xsaved" ] ; then GRUB_DEFAULT='${saved_entry}' ; fi
-if [ "x${GRUB_TIMEOUT}" = "x" ] ; then GRUB_TIMEOUT=5 ; fi
-if [ "x${GRUB_GFXMODE}" = "x" ] ; then GRUB_GFXMODE=auto ; fi
+# Assign values if empty
+[ "${GRUB_DEFAULT}" ] || GRUB_DEFAULT=0
+[ "${GRUB_TIMEOUT}" ] || GRUB_TIMEOUT=5
+[ "${GRUB_GFXMODE}" ] || GRUB_GFXMODE=auto
+[ "${GRUB_DEFAULT_BUTTON}" ] || GRUB_DEFAULT_BUTTON="$GRUB_DEFAULT"
+[ "${GRUB_TIMEOUT_BUTTON}" ] || GRUB_TIMEOUT_BUTTON="$GRUB_TIMEOUT"
 
-if [ "x${GRUB_DEFAULT_BUTTON}" = "x" ] ; then GRUB_DEFAULT_BUTTON="$GRUB_DEFAULT" ; fi
-if [ "x${GRUB_DEFAULT_BUTTON}" = "xsaved" ] ; then GRUB_DEFAULT_BUTTON='${saved_entry}' ; fi
-if [ "x${GRUB_TIMEOUT_BUTTON}" = "x" ] ; then GRUB_TIMEOUT_BUTTON="$GRUB_TIMEOUT" ; fi
+# Assign values if saved appear
+[ "x${GRUB_DEFAULT}" = "xsaved" ] && GRUB_DEFAULT='${saved_entry}'
+[ "x${GRUB_DEFAULT_BUTTON}" = "xsaved" ] && GRUB_DEFAULT_BUTTON='${saved_entry}'
 
 cat << EOF
-if [ -s \$prefix/grubenv ]; then
-  load_env
-fi
+	if [ -s \$prefix/grubenv ]; then
+		load_env
+	fi
 EOF
-if [ "x$GRUB_BUTTON_CMOS_ADDRESS" != "x" ]; then
-    cat <<EOF
-if cmostest $GRUB_BUTTON_CMOS_ADDRESS ; then
-   set default="${GRUB_DEFAULT_BUTTON}"
-elif [ "\${next_entry}" ] ; then
-   set default="\${next_entry}"
-   set next_entry=
-   save_env next_entry
-   set boot_once=true
-else
-   set default="${GRUB_DEFAULT}"
-fi
+
+# Assign default entry
+if [ "x$GRUB_BUTTON_CMOS_ADDRESS" != "x" ] ; then
+	cat <<EOF
+	if cmostest $GRUB_BUTTON_CMOS_ADDRESS
+	then
+		set default="${GRUB_DEFAULT_BUTTON}"
+	elif [ "\${next_entry}" ]
+	then
+		set default="\${next_entry}"
+		set next_entry=
+		save_env next_entry
+		set boot_once=true
+	else
+		set default="${GRUB_DEFAULT}"
+	fi
 EOF
 else
-    cat <<EOF
-if [ "\${next_entry}" ] ; then
-   set default="\${next_entry}"
-   set next_entry=
-   save_env next_entry
-   set boot_once=true
-else
-   set default="${GRUB_DEFAULT}"
-fi
+	cat <<EOF
+	if [ "\${next_entry}" ]
+	then
+		set default="\${next_entry}"
+		set next_entry=
+		save_env next_entry
+		set boot_once=true
+	else
+		set default="${GRUB_DEFAULT}"
+	fi
 EOF
-fi
+fi # finish if about GRUB_BUTTON_CMOS_ADDRESS
+
 cat <<EOF
-
-if [ x"\${feature_menuentry_id}" = xy ]; then
-  menuentry_id_option="--id"
-else
-  menuentry_id_option=""
-fi
-
-export menuentry_id_option
-
-if [ "\${prev_saved_entry}" ]; then
-  set saved_entry="\${prev_saved_entry}"
-  save_env saved_entry
-  set prev_saved_entry=
-  save_env prev_saved_entry
-  set boot_once=true
-fi
-
-function savedefault {
-  if [ -z "\${boot_once}" ]; then
-    saved_entry="\${chosen}"
-    save_env saved_entry
-  fi
-}
-
-function load_video {
-EOF
-if [ -n "${GRUB_VIDEO_BACKEND}" ]; then
-    cat <<EOF
-  insmod ${GRUB_VIDEO_BACKEND}
-EOF
-else
-# If all_video.mod isn't available load all modules available
-# with versions prior to introduction of all_video.mod
-cat <<EOF
-  if [ x\$feature_all_video_module = xy ]; then
-    insmod all_video
-  else
-    insmod efi_gop
-    insmod efi_uga
-    insmod ieee1275_fb
-    insmod vbe
-    insmod vga
-    insmod video_bochs
-    insmod video_cirrus
-  fi
-EOF
-fi
-cat <<EOF
-}
-
-EOF
-
-serial=0;
-gfxterm=0;
-for x in ${GRUB_TERMINAL_INPUT} ${GRUB_TERMINAL_OUTPUT}; do
-    if [ xserial = "x$x" ]; then
-	serial=1;
-    fi
-    if [ xgfxterm = "x$x" ]; then
-	gfxterm=1;
-    fi
-done
-
-if [ "x$serial" = x1 ]; then
-    if [ "x${GRUB_SERIAL_COMMAND}" = "x" ] ; then
-	grub_warn "$(gettext "Requested serial terminal but GRUB_SERIAL_COMMAND is unspecified. Default parameters will be used.")"
-	GRUB_SERIAL_COMMAND=serial
-    fi
-    echo "${GRUB_SERIAL_COMMAND}"
-fi
-
-if [ "x$gfxterm" = x1 ]; then
-    if [ -n "$GRUB_FONT" ] ; then
-       # Make the font accessible
-       prepare_grub_to_access_device `${grub_probe} --target=device "${GRUB_FONT}"`
-    cat << EOF
-if loadfont `make_system_path_relative_to_its_root "${GRUB_FONT}"` ; then
-EOF
-    else
-	for dir in "${pkgdatadir}" "`echo '/@bootdirname@/@grubdirname@' | sed "s,//*,/,g"`" /usr/share/grub ; do
-	    for basename in unicode unifont ascii; do
-		path="${dir}/${basename}.pf2"
-		if is_path_readable_by_grub "${path}" > /dev/null ; then
-		    font_path="${path}"
-		else
-		    continue
-		fi
-		break 2
-	    done
-	done
-	if [ -n "${font_path}" ] ; then
-    cat << EOF
-if [ x\$feature_default_font_path = xy ] ; then
-   font=unicode
-else
-EOF
-                # Make the font accessible
-		prepare_grub_to_access_device `${grub_probe} --target=device "${font_path}"`
-    cat << EOF
-    font="`make_system_path_relative_to_its_root "${font_path}"`"
-fi
-
-if loadfont \$font ; then
-EOF
-	    else
-    cat << EOF
-if loadfont unicode ; then
-EOF
-	    fi
+	if [ x"\${feature_menuentry_id}" = xy ] ; then
+		menuentry_id_option="--id"
+	else
+		menuentry_id_option=""
 	fi
 
-    cat << EOF
-  set gfxmode=${GRUB_GFXMODE}
-  load_video
-  insmod gfxterm
+	export menuentry_id_option
+
+	if [ "\${prev_saved_entry}" ] ; then
+		set saved_entry="\${prev_saved_entry}"
+		save_env saved_entry
+		set prev_saved_entry=
+		save_env prev_saved_entry
+		set boot_once=true
+	fi
+
+	function savedefault {
+	if [ -z "\${boot_once}" ] ; then
+		saved_entry="\${chosen}"
+		save_env saved_entry
+	fi
+	}
+
+	function load_video {
+EOF
+
+# if GRUB_VIDEO_BACKEND is set, load respective module
+if [ -n "${GRUB_VIDEO_BACKEND}" ] ; then
+	cat <<EOF
+	insmod ${GRUB_VIDEO_BACKEND}
+EOF
+else
+	# If all_video.mod isn't available load all modules available
+	# with versions prior to introduction of all_video.mod
+	cat <<EOF
+	if [ x\$feature_all_video_module = xy ] ; then
+ 		insmod all_video
+	else
+		insmod efi_gop
+		insmod efi_uga
+		insmod ieee1275_fb
+		insmod vbe
+		insmod vga
+		insmod video_bochs
+		insmod video_cirrus
+	fi
+EOF
+fi # finish if about GRUB_VIDEO_BACKEND
+
+# close "function load_video"
+cat <<EOF
+}
+EOF
+
+# According GRUB_TERMINAL_INPUT and GRUB_TERMINAL_OUTPUT values, some decisions have to be taken
+# Assign default values and then process them
+serial=0;
+gfxterm=0;
+for each in ${GRUB_TERMINAL_INPUT} ${GRUB_TERMINAL_OUTPUT}; do
+	if [ xserial = "x${each}" ]; then
+		serial=1;
+	fi
+	if [ xgfxterm = "x${each}" ]; then
+		gfxterm=1;
+	fi
+done
+
+# Process GRUB_SERIAL_COMMAND
+if [ "x$serial" = x1 ]; then
+	if [ "x${GRUB_SERIAL_COMMAND}" = "x" ] ; then
+		grub_warn "$(gettext "Requested serial terminal but GRUB_SERIAL_COMMAND is unspecified. Default parameters will be used.")"
+		GRUB_SERIAL_COMMAND=serial
+	fi
+	echo "${GRUB_SERIAL_COMMAND}"
+fi
+
+# if gfxterm (graphics-mode output) is set
+if [ "x$gfxterm" = x1 ]; then
+	if [ -n "$GRUB_FONT" ] ; then
+		# Make the font accessible
+		prepare_grub_to_access_device `${grub_probe} --target=device "${GRUB_FONT}"`
+		cat << EOF
+		if loadfont `make_system_path_relative_to_its_root "${GRUB_FONT}"` ; then
+EOF
+else
+	for dir in "${pkgdatadir}" "`echo '/@bootdirname@/@grubdirname@' | sed "s,//*,/,g"`" /usr/share/grub ; do
+		for basename in unicode unifont ascii; do
+			path="${dir}/${basename}.pf2"
+			if is_path_readable_by_grub "${path}" > /dev/null ; then
+				font_path="${path}"
+				break 2
+			fi
+		done
+	done
+	# if font_path is not NULL
+	if [ -n "${font_path}" ] ; then
+		cat << EOF
+		if [ x\$feature_default_font_path = xy ] ; then
+			font=unicode
+		else
+EOF
+
+                # Make the font accessible
+		prepare_grub_to_access_device `${grub_probe} --target=device "${font_path}"`
+		cat << EOF
+			font="`make_system_path_relative_to_its_root "${font_path}"`"
+		fi
+		if loadfont \$font ; then
+EOF
+	# if font_path is NULL, then use unicode
+	else
+		cat << EOF
+		if loadfont unicode ; then
+EOF
+	fi # finish if about font_path
+fi
+
+cat << EOF
+			set gfxmode=${GRUB_GFXMODE}
+			load_video
+			insmod gfxterm
 EOF
 
 # Gettext variables and module
 if [ "x${LANG}" != "xC" ] ; then
-  cat << EOF
-  set locale_dir=\$prefix/locale
-  set lang=${grub_lang}
-  insmod gettext
+	cat << EOF
+			set locale_dir=\$prefix/locale
+			set lang=${grub_lang}
+			insmod gettext
 EOF
 fi
 
 cat <<EOF
-fi
+		fi
 EOF
-fi
+fi # finish if about gfxterm
 
-case x${GRUB_TERMINAL_INPUT} in
-  x)
-    # Just use the native terminal
-  ;;
-  x*)
-    cat << EOF
-terminal_input ${GRUB_TERMINAL_INPUT}
+# if GRUB_TERMINAL_INPUT is set, set terminal_input
+# if not, just use the native terminal (without set)
+if [ "x${GRUB_TERMINAL_INPUT}" != "x" ] ; then
+	cat << EOF
+	terminal_input ${GRUB_TERMINAL_INPUT}
 EOF
-  ;;
-esac
+fi 
 
-case x${GRUB_TERMINAL_OUTPUT} in
-  x)
-    # Just use the native terminal
-  ;;
-  x*)
-    cat << EOF
-terminal_output ${GRUB_TERMINAL_OUTPUT}
+# if GRUB_TERMINAL_OUTPUT is set, set terminal_output
+# if not, just use the native terminal (without set)
+if [ "x${GRUB_TERMINAL_OUTPUT}" != "x" ] ; then
+	cat << EOF
+	terminal_output ${GRUB_TERMINAL_OUTPUT}
 EOF
-  ;;
-esac
+fi
 
 if [ "x$gfxterm" = x1 ]; then
-    if [ "x$GRUB_THEME" != x ] && [ -f "$GRUB_THEME" ] \
+	if [ "x$GRUB_THEME" != x ] && [ -f "$GRUB_THEME" ] \
 	&& is_path_readable_by_grub "$GRUB_THEME"; then
-	gettext_printf "Found theme: %s\n" "$GRUB_THEME" >&2
+		gettext_printf "Found theme: %s\n" "$GRUB_THEME" >&2
 
-	prepare_grub_to_access_device `${grub_probe} --target=device "$GRUB_THEME"`
-	cat << EOF
-insmod gfxmenu
-EOF
-	themedir="`dirname "$GRUB_THEME"`"
-	for x in "$themedir"/*.pf2 "$themedir"/f/*.pf2; do
-	    if [ -f "$x" ]; then
+		prepare_grub_to_access_device `${grub_probe} --target=device "$GRUB_THEME"`
 		cat << EOF
-loadfont (\$root)`make_system_path_relative_to_its_root $x`
+		insmod gfxmenu
 EOF
-	    fi
-	done
-	if [ x"`echo "$themedir"/*.jpg`" != x"$themedir/*.jpg" ] || [ x"`echo "$themedir"/*.jpeg`" != x"$themedir/*.jpeg" ]; then
-	    cat << EOF
-insmod jpeg
+		themedir="`dirname "$GRUB_THEME"`"
+		for x in "$themedir"/*.pf2 "$themedir"/f/*.pf2; do
+			if [ -f "$x" ]; then
+				cat << EOF
+				loadfont (\$root)`make_system_path_relative_to_its_root $x`
 EOF
-	fi
-	if [ x"`echo "$themedir"/*.png`" != x"$themedir/*.png" ]; then
-	    cat << EOF
-insmod png
+			fi
+		done
+		if [ x"`echo "$themedir"/*.jpg`" != x"$themedir/*.jpg" ] || [ x"`echo "$themedir"/*.jpeg`" != x"$themedir/*.jpeg" ]; then
+	    		cat << EOF
+			insmod jpeg
 EOF
-	fi
-	if [ x"`echo "$themedir"/*.tga`" != x"$themedir/*.tga" ]; then
-	    cat << EOF
-insmod tga
+		fi
+		if [ x"`echo "$themedir"/*.png`" != x"$themedir/*.png" ]; then
+			cat << EOF
+			insmod png
 EOF
-	fi
+		fi
+		if [ x"`echo "$themedir"/*.tga`" != x"$themedir/*.tga" ]; then
+			cat << EOF
+			insmod tga
+EOF
+		fi
 	    
 	cat << EOF
-set theme=(\$root)`make_system_path_relative_to_its_root $GRUB_THEME`
-export theme
+	set theme=(\$root)`make_system_path_relative_to_its_root $GRUB_THEME`
+	export theme
 EOF
-    elif [ "x$GRUB_BACKGROUND" != x ] && [ -f "$GRUB_BACKGROUND" ] \
-	    && is_path_readable_by_grub "$GRUB_BACKGROUND"; then
-	gettext_printf "Found background: %s\n" "$GRUB_BACKGROUND" >&2
-	case "$GRUB_BACKGROUND" in 
-	    *.png)         reader=png ;;
-	    *.tga)         reader=tga ;;
-	    *.jpg|*.jpeg)  reader=jpeg ;;
-	    *)             gettext "Unsupported image format" >&2; echo >&2; exit 1 ;;
-	esac
-	prepare_grub_to_access_device `${grub_probe} --target=device "$GRUB_BACKGROUND"`
-	cat << EOF
-insmod $reader
-background_image -m stretch `make_system_path_relative_to_its_root "$GRUB_BACKGROUND"`
+	elif [ "x$GRUB_BACKGROUND" != x ] && [ -f "$GRUB_BACKGROUND" ] \
+	&& is_path_readable_by_grub "$GRUB_BACKGROUND"; then
+		gettext_printf "Found background: %s\n" "$GRUB_BACKGROUND" >&2
+
+		case "$GRUB_BACKGROUND" in 
+			*.png)         reader=png ;;
+			*.tga)         reader=tga ;;
+			*.jpg|*.jpeg)  reader=jpeg ;;
+			*) gettext "Unsupported image format" >&2; echo >&2; exit 1 ;;
+		esac
+		
+		prepare_grub_to_access_device `${grub_probe} --target=device "$GRUB_BACKGROUND"`
+		cat << EOF
+		insmod $reader
+		background_image -m stretch `make_system_path_relative_to_its_root "$GRUB_BACKGROUND"`
 EOF
-    fi
-fi
+	fi #finish if about GRUB_THEME
+fi #finish if about gfxterm
 
 make_timeout ()
 {
-    if [ "x${1}" != "x" ] ; then
-	if [ "x${GRUB_HIDDEN_TIMEOUT_QUIET}" = "xtrue" ] ; then
-	    verbose=
-	else
-	    verbose=" --verbose"
+	if [ "x${1}" != "x" ] ; then
+		if [ "x${GRUB_HIDDEN_TIMEOUT_QUIET}" = "xtrue" ] ; then
+			verbose=
+		else
+			verbose=" --verbose"
+		fi
+		cat << EOF
+		if sleep$verbose --interruptible ${1} ; then
+			set timeout=${2}
+		fi
+EOF
+else
+		cat << EOF
+		set timeout=${2}
+EOF
 	fi
-	cat << EOF
-if sleep$verbose --interruptible ${1} ; then
-  set timeout=${2}
-fi
-EOF
-    else
-	cat << EOF
-set timeout=${2}
-EOF
-    fi
 }
 
 if [ "x$GRUB_BUTTON_CMOS_ADDRESS" != "x" ]; then
-    cat <<EOF
-if cmostest $GRUB_BUTTON_CMOS_ADDRESS ; then
+	cat <<EOF
+	if cmostest $GRUB_BUTTON_CMOS_ADDRESS ; then
 EOF
-make_timeout "${GRUB_HIDDEN_TIMEOUT_BUTTON}" "${GRUB_TIMEOUT_BUTTON}"
-echo else
-make_timeout "${GRUB_HIDDEN_TIMEOUT}" "${GRUB_TIMEOUT}"
-echo fi
+	make_timeout "${GRUB_HIDDEN_TIMEOUT_BUTTON}" "${GRUB_TIMEOUT_BUTTON}"
+	echo else
+	make_timeout "${GRUB_HIDDEN_TIMEOUT}" "${GRUB_TIMEOUT}"
+	echo fi
 else
-make_timeout "${GRUB_HIDDEN_TIMEOUT}" "${GRUB_TIMEOUT}"
+	make_timeout "${GRUB_HIDDEN_TIMEOUT}" "${GRUB_TIMEOUT}"
 fi
 
 if [ "x$GRUB_BUTTON_CMOS_ADDRESS" != "x" ] && [ "x$GRUB_BUTTON_CMOS_CLEAN" = "xyes" ]; then
-    cat <<EOF
-cmosclean $GRUB_BUTTON_CMOS_ADDRESS
+	cat <<EOF
+	cmosclean $GRUB_BUTTON_CMOS_ADDRESS
 EOF
 fi
 
 # Play an initial tune
 if [ "x${GRUB_INIT_TUNE}" != "x" ] ; then
-  echo "play ${GRUB_INIT_TUNE}"
+	echo "play ${GRUB_INIT_TUNE}"
 fi
 
+# This command notifies the memory manager that specified regions of RAM ought to be filtered out (usually, because they are damaged)
 if [ "x${GRUB_BADRAM}" != "x" ] ; then
-  echo "badram ${GRUB_BADRAM}"
+	echo "badram ${GRUB_BADRAM}"
 fi
