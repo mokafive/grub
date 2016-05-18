@@ -171,10 +171,8 @@ else
 			path="${dir}/${basename}.pf2"
 			if is_path_readable_by_grub "${path}" > /dev/null ; then
 				font_path="${path}"
-			else
-				continue
+				break 2
 			fi
-			break 2
 		done
 	done
 	# if font_path is not NULL
@@ -218,7 +216,7 @@ fi
 cat <<EOF
 		fi
 EOF
-fi
+fi # finish if about gfxterm
 
 case x${GRUB_TERMINAL_INPUT} in
   x)
