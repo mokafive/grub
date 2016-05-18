@@ -311,28 +311,29 @@ EOF
 }
 
 if [ "x$GRUB_BUTTON_CMOS_ADDRESS" != "x" ]; then
-    cat <<EOF
-if cmostest $GRUB_BUTTON_CMOS_ADDRESS ; then
+	cat <<EOF
+	if cmostest $GRUB_BUTTON_CMOS_ADDRESS ; then
 EOF
-make_timeout "${GRUB_HIDDEN_TIMEOUT_BUTTON}" "${GRUB_TIMEOUT_BUTTON}"
-echo else
-make_timeout "${GRUB_HIDDEN_TIMEOUT}" "${GRUB_TIMEOUT}"
-echo fi
+	make_timeout "${GRUB_HIDDEN_TIMEOUT_BUTTON}" "${GRUB_TIMEOUT_BUTTON}"
+	echo else
+	make_timeout "${GRUB_HIDDEN_TIMEOUT}" "${GRUB_TIMEOUT}"
+	echo fi
 else
-make_timeout "${GRUB_HIDDEN_TIMEOUT}" "${GRUB_TIMEOUT}"
+	make_timeout "${GRUB_HIDDEN_TIMEOUT}" "${GRUB_TIMEOUT}"
 fi
 
 if [ "x$GRUB_BUTTON_CMOS_ADDRESS" != "x" ] && [ "x$GRUB_BUTTON_CMOS_CLEAN" = "xyes" ]; then
-    cat <<EOF
-cmosclean $GRUB_BUTTON_CMOS_ADDRESS
+	cat <<EOF
+	cmosclean $GRUB_BUTTON_CMOS_ADDRESS
 EOF
 fi
 
 # Play an initial tune
 if [ "x${GRUB_INIT_TUNE}" != "x" ] ; then
-  echo "play ${GRUB_INIT_TUNE}"
+	echo "play ${GRUB_INIT_TUNE}"
 fi
 
+# This command notifies the memory manager that specified regions of RAM ought to be filtered out (usually, because they are damaged)
 if [ "x${GRUB_BADRAM}" != "x" ] ; then
-  echo "badram ${GRUB_BADRAM}"
+	echo "badram ${GRUB_BADRAM}"
 fi
