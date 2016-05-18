@@ -218,27 +218,21 @@ cat <<EOF
 EOF
 fi # finish if about gfxterm
 
-case x${GRUB_TERMINAL_INPUT} in
-  x)
-    # Just use the native terminal
-  ;;
-  x*)
-    cat << EOF
-terminal_input ${GRUB_TERMINAL_INPUT}
+# if GRUB_TERMINAL_INPUT is set, set terminal_input
+# if not, just use the native terminal (without set)
+if [ "x${GRUB_TERMINAL_INPUT}" != "x" ] ; then
+	cat << EOF
+	terminal_input ${GRUB_TERMINAL_INPUT}
 EOF
-  ;;
-esac
+fi 
 
-case x${GRUB_TERMINAL_OUTPUT} in
-  x)
-    # Just use the native terminal
-  ;;
-  x*)
-    cat << EOF
-terminal_output ${GRUB_TERMINAL_OUTPUT}
+# if GRUB_TERMINAL_OUTPUT is set, set terminal_output
+# if not, just use the native terminal (without set)
+if [ "x${GRUB_TERMINAL_OUTPUT}" != "x" ] ; then
+	cat << EOF
+	terminal_output ${GRUB_TERMINAL_OUTPUT}
 EOF
-  ;;
-esac
+fi
 
 if [ "x$gfxterm" = x1 ]; then
     if [ "x$GRUB_THEME" != x ] && [ -f "$GRUB_THEME" ] \
