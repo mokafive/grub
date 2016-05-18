@@ -30,23 +30,26 @@ export TEXTDOMAINDIR="@localedir@"
 # Do this as early as possible, since other commands might depend on it.
 # (e.g. the `loadfont' command might need lvm or raid modules)
 for i in ${GRUB_PRELOAD_MODULES} ; do
-  echo "insmod $i"
+	echo "insmod $i"
 done
 
-if [ "x${GRUB_DEFAULT}" = "x" ] ; then GRUB_DEFAULT=0 ; fi
-if [ "x${GRUB_DEFAULT}" = "xsaved" ] ; then GRUB_DEFAULT='${saved_entry}' ; fi
-if [ "x${GRUB_TIMEOUT}" = "x" ] ; then GRUB_TIMEOUT=5 ; fi
-if [ "x${GRUB_GFXMODE}" = "x" ] ; then GRUB_GFXMODE=auto ; fi
+# Assign values if empty
+[ "${GRUB_DEFAULT}" ] || GRUB_DEFAULT=0
+[ "${GRUB_TIMEOUT}" ] || GRUB_TIMEOUT=5
+[ "${GRUB_GFXMODE}" ] || GRUB_GFXMODE=auto
+[ "${GRUB_DEFAULT_BUTTON}" ] || GRUB_DEFAULT_BUTTON="$GRUB_DEFAULT"
+[ "${GRUB_TIMEOUT_BUTTON}" ] || GRUB_TIMEOUT_BUTTON="$GRUB_TIMEOUT"
 
-if [ "x${GRUB_DEFAULT_BUTTON}" = "x" ] ; then GRUB_DEFAULT_BUTTON="$GRUB_DEFAULT" ; fi
-if [ "x${GRUB_DEFAULT_BUTTON}" = "xsaved" ] ; then GRUB_DEFAULT_BUTTON='${saved_entry}' ; fi
-if [ "x${GRUB_TIMEOUT_BUTTON}" = "x" ] ; then GRUB_TIMEOUT_BUTTON="$GRUB_TIMEOUT" ; fi
+# Assign values if saved appear
+[ "x${GRUB_DEFAULT}" = "xsaved" ] && GRUB_DEFAULT='${saved_entry}'
+[ "x${GRUB_DEFAULT_BUTTON}" = "xsaved" ] && GRUB_DEFAULT_BUTTON='${saved_entry}'
 
 cat << EOF
-if [ -s \$prefix/grubenv ]; then
-  load_env
-fi
+	if [ -s \$prefix/grubenv ]; then
+		load_env
+	fi
 EOF
+
 if [ "x$GRUB_BUTTON_CMOS_ADDRESS" != "x" ]; then
     cat <<EOF
 if cmostest $GRUB_BUTTON_CMOS_ADDRESS ; then
