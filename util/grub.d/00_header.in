@@ -110,30 +110,33 @@ cat <<EOF
 	function load_video {
 EOF
 
-if [ -n "${GRUB_VIDEO_BACKEND}" ]; then
-    cat <<EOF
-  insmod ${GRUB_VIDEO_BACKEND}
+# if GRUB_VIDEO_BACKEND is set, load respective module
+if [ -n "${GRUB_VIDEO_BACKEND}" ] ; then
+	cat <<EOF
+	insmod ${GRUB_VIDEO_BACKEND}
 EOF
 else
-# If all_video.mod isn't available load all modules available
-# with versions prior to introduction of all_video.mod
-cat <<EOF
-  if [ x\$feature_all_video_module = xy ]; then
-    insmod all_video
-  else
-    insmod efi_gop
-    insmod efi_uga
-    insmod ieee1275_fb
-    insmod vbe
-    insmod vga
-    insmod video_bochs
-    insmod video_cirrus
-  fi
+	# If all_video.mod isn't available load all modules available
+	# with versions prior to introduction of all_video.mod
+	cat <<EOF
+	if [ x\$feature_all_video_module = xy ]
+	then
+ 		insmod all_video
+	else
+		insmod efi_gop
+		insmod efi_uga
+		insmod ieee1275_fb
+		insmod vbe
+		insmod vga
+		insmod video_bochs
+		insmod video_cirrus
+	fi
 EOF
-fi
+fi # finish if about GRUB_VIDEO_BACKEND
+
+# close "function load_video"
 cat <<EOF
 }
-
 EOF
 
 serial=0;
